@@ -1,0 +1,1 @@
+恭喜{{$nickname}}成功註冊laravel shop
