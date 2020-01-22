@@ -4,8 +4,9 @@ namespace App\Shop\Entity;
 
 use Illuminate\Database\Eloquent\Model;
 
-class transactions extends Model
+class transaction extends Model
 {
+    
     // 資料表名稱
     protected $table = 'transaction';
     // 主鍵名稱
@@ -19,4 +20,8 @@ class transactions extends Model
         "buy_count",
         "total_price",
     ];
+    //關聯(參數二是商品的ID參數三是交易紀錄的ID)
+    public function Merchandise(){
+        return $this->hasOne('App\Shop\Entity\Merchandise','id','merchandise_id');
+    }
 }

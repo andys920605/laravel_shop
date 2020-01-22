@@ -9,7 +9,7 @@
         @include('components.socialButtons')
         @include('components.validationErrorMessage')
 
-        <form action ="/merchandise/{{$Merchandise->id}}"
+        <form action ="/shop_laravel/public/merchandise/{{$Merchandise->id}}"
             method="post"
             enctype="multipart/form-data"
         
@@ -61,9 +61,9 @@
             <label>
                 商品介紹:
                 <input type="text"
-                    name="intorduction""
+                    name="introduction"
                     placeholder="商品介紹"
-                    value="{{old('intorduction',$Merchandise->intorduction)}}"
+                    value="{{old('introduction',$Merchandise->introduction)}}"
                 
                 
                 >
@@ -76,9 +76,9 @@
             <label>
                 商品英文介紹:
                 <input type="text"
-                    name="intorduction_en"
+                    name="introduction_en"
                     placeholder="商品英文介紹"
-                    value="{{old('intorduction_en',$Merchandise->intorduction_en)}}"
+                    value="{{old('introduction_en',$Merchandise->introduction_en)}}"
                 
                 
                 >
@@ -89,7 +89,7 @@
 
             <label>
                 商品照片:
-                <input type="file""
+                <input type="file"
                     name="photo"
                     placeholder="商品照片"
                     <img src="{{$Merchandise->photo or '/assets/images/default-merchandise.png'}}">

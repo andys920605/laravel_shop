@@ -32,7 +32,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <form action ="/merchandise/{{$Merchandise->id}}/buy"method="post">
+                    <form action ="/shop_laravel/public/merchandise/{{$Merchandise->id}}/buy"method="post">
                     購買數量
                     <select name ="buy_count">
                     @for($count=0;$count<=$Merchandise->remain_count;$count++)

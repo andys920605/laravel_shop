@@ -4,7 +4,7 @@ namespace App\Shop\Entity;
 
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model {
+class user extends Model {
     // 資料表名稱
     protected $table = 'users';
     // 主鍵名稱

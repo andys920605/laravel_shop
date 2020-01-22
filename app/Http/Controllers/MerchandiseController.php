@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Shop\Entity\Merchandise;
+use App\Shop\Entity\Transaction;
+use App\Shop\Entity\User;
+use DB;
+use Exception;
 use Image;
 use Validator;
 
@@ -52,7 +56,7 @@ class MerchandiseController extends Controller {
 
     public function merchandiseItemUpdateProcess($merchandise_id){
         //撈取商品資料
-        $Merchandise = Merchandise::firstOrFail($merchandise_id);
+        $Merchandise = Merchandise::findOrFail($merchandise_id);
         $input=request()->all();
         
         //驗證規則
@@ -102,14 +106,12 @@ class MerchandiseController extends Controller {
             ],
         ];
         //驗證資料
-        $validator = Validator::make($inpur,$rules);
+        $validator = Validator::make($input,$rules);
 
         if($validator->fails()){
             return redirect('/merchandise/'.$Merchandise->id.'/edit')
-            ->wirhErrors($validator)
+            ->withErrors($validator)
             ->withInput();
-        }else{
-            return redirect('/merchandise/'.$Merchandise->id.'/edit');
         }
 
 
@@ -187,5 +189,116 @@ class MerchandiseController extends Controller {
 
     }
     
+
+    public function merchandiseListPage(){  
+        //每頁資料量
+        $row_per_page = 10;
+        
+        $MerchandisePaginate=Merchandise::Orderby('updated_at','desc')
+        ->where('status','S')
+        ->paginate($row_per_page);
+
+        //設定圖片
+        foreach ($MerchandisePaginate as &$Merchandise){
+            if (!is_null($Merchandise->photo)){
+                $Merchandise->photo = url($Merchandise->photo);
+            }
+        }
+
+        $binding = [
+            'title'=>'商品列表',
+            'MerchandisePaginate'=> $MerchandisePaginate,
+        ];
+
+        return view ('merchandise.listMerchandise',$binding);
+
+
+    }  
+
+
+    public function merchandiseItemBuyProcess($merchandise_id){
+        //接收輸入的資料
+        $input = request()->all();
+        
+        $rules = [
+            'buy_count'=>[
+            'required',
+            'integer',
+            'min:1',
+            ],
+        ];
+
+        $validator = Validator::make($input,$rules);
+
+        if($validator->fails()){
+            return redirect('/merchandise/'.$Merchandise->id)
+            ->withErrors($validator)
+            ->withInput();
+        }
+
+        try{
+            $user_id=session()->get('user_id');
+            $User=User::findOrFail($user_id);
+
+            //交易開始
+            DB::beginTransaction();
+            //取得商品資料
+            $Merchandise=Merchandise::findOrFail($merchandise_id);
+            //購買數量
+            $buy_count=$input['buy_count'];
+            //購買後剩餘數量
+            $remain_count_after_buy = $Merchandise->remain_count-$buy_count;
+            if ($remain_count_after_buy<0){
+                throw new Exception('商品數量不足無法購買');
+                
+            }
+            //紀錄購買後剩餘數量
+            $Merchandise->remain_count =$remain_count_after_buy;
+            $Merchandise->save();
+            //總金額
+            $total_price =$buy_count * $Merchandise->price;
+
+            $transaction_data =[
+                'user_id'          => $User->id,
+                'merchandise_id'   =>$merchandise_id,
+                'price'            =>$Merchandise->price,
+                'buy_count'        =>$buy_count,
+                'total_price'      =>$total_price,
+            ];
+
+
+            //建立交易資料
+            Transaction::create($transaction_data);
+            //交易結束
+            DB::commit();
+
+            //回傳購物訊息成功
+            $message=[
+                'msg'=>[
+                    '購買成功',
+                ],
+            ];
+
+            return redirect()
+            ->to('/merchandise/'.$Merchandise->id)
+            ->withErrors($message);
+
+        }catch(Exception $exception){
+            //恢復原先交易
+            DB::rollBack();
+
+            //回傳錯誤訊息
+            $error_message =[
+                'msg'=>[
+                    $exception->getMessage(),
+                ],
+            ];
+        }
+        return redirect()
+        ->back()
+        ->withErrors($error_message)
+        ->withInput();
+
+    }
     
 }
